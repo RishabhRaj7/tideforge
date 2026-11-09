@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { GameImage } from "@/components/GameImage";
 import { useMemo, useState } from "react";
 
 type Row = { slug: string; name: string; no: string; cost: number; class: string; sonatas: string[] };
@@ -24,7 +25,7 @@ export function EchoBrowser({ rows }: { rows: Row[] }) {
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {list.map((e) => (
           <Link key={e.slug} href={`/echoes/${e.slug}`} className="card-raised flex items-center justify-between gap-3 p-3 no-underline transition-colors hover:border-accent">
-            <span><span className="block text-[14px]">{e.name}</span><span className="block text-[11.5px] text-dim">{e.class} · {e.sonatas.length ? e.sonatas.join(", ") : "no set listed"}</span></span>
+            <span className="flex min-w-0 items-center gap-3"><GameImage variant="icon" src={`/img/echoes/${e.slug}.webp`} alt="" className="h-12 w-12 shrink-0" /><span className="min-w-0"><span className="block truncate text-[14px]">{e.name}</span><span className="block truncate text-[11.5px] text-dim">{e.class} · {e.sonatas.length ? e.sonatas.join(", ") : "no set listed"}</span></span></span>
             <span className="chip num shrink-0">{e.cost}</span>
           </Link>
         ))}

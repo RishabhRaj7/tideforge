@@ -3,7 +3,8 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useState } from "react";
 import { ELEMENTS } from "@/engine/constants";
-import { ELEMENT_COLOR, ELEMENT_GLYPH } from "@/lib/game";
+import { ELEMENT_COLOR } from "@/lib/game";
+import { ElementIcon, GameImage } from "@/components/GameImage";
 import { ROLES, TIERS, type Role, type Tier } from "@/content/tier-list";
 import { usePrefs } from "@/store/prefs";
 
@@ -38,7 +39,7 @@ export function TierBoard({ rated, unrated }: { rated: Rated[]; unrated: Unrated
         <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Element filter">
           {["All", ...ELEMENTS].map((e) => (
             <button key={e} className="chip" data-on={el === e} aria-pressed={el === e} onClick={() => setEl(e)} style={e !== "All" ? { borderLeft: `3px solid ${ELEMENT_COLOR[e]}` } : undefined}>
-              {e !== "All" && <span aria-hidden>{ELEMENT_GLYPH[e]}</span>}{e}
+              {e !== "All" && <ElementIcon element={e} size={14} />}{e}
             </button>
           ))}
           <button className="chip ml-auto" data-on={mine} aria-pressed={mine} onClick={() => setMine((m) => !m)}>My roster only</button>
@@ -56,11 +57,12 @@ export function TierBoard({ rated, unrated }: { rated: Rated[]; unrated: Unrated
                   {row.map((r) => (
                     <motion.div key={r.slug} layout initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.92 }} transition={{ duration: 0.2 }}>
                       <Link href={`/characters/${r.slug}`} className="card-raised group block w-[148px] p-2.5 no-underline transition-colors hover:border-accent" style={{ borderTop: `2px solid ${ELEMENT_COLOR[r.element]}` }} title={r.note}>
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium">{r.name}</span>
-                          <span aria-hidden style={{ color: ELEMENT_COLOR[r.element] }}>{ELEMENT_GLYPH[r.element]}</span>
+                        <div className="flex items-center gap-2">
+                          <GameImage src={`/img/characters/${r.slug}-icon.webp`} variant="icon" element={r.element} alt="" className="h-9 w-9 shrink-0" rounded="8px" />
+                          <span className="min-w-0 flex-1 truncate font-medium">{r.name}</span>
+                          <ElementIcon element={r.element} size={14} />
                         </div>
-                        <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-dim">
+                        <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-dim">
                           {r.role}
                           {r.expert && <span className="rounded-sm border border-warn/50 px-1 text-[9px] uppercase text-warn">Expert</span>}
                         </div>

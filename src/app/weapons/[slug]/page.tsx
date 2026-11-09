@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { GameImage } from "@/components/GameImage";
 import { notFound } from "next/navigation";
 import { ReportIssue } from "@/components/ReportIssue";
 import { ConfidenceBadge, Notice, PageHead, RarityStars } from "@/components/ui";
@@ -19,6 +20,7 @@ export default async function WeaponPage({ params }: { params: Promise<{ slug: s
   if (!w) notFound();
   return (
     <div>
+      <GameImage variant="icon" src={`/img/weapons/${w.slug}.webp`} alt={`${w.name} icon`} className="mb-4 h-32 w-32 border border-line" rounded="12px" />
       <PageHead kicker={`${w.type} · ${w.source || "Weapon"}`} title={w.name}>
         <RarityStars n={w.rarity} /> {w.resonator && <>Signature weapon of <Link className="text-accent" href={w.resonatorSlug ? `/characters/${w.resonatorSlug}` : "/characters"}>{w.resonator}</Link>.</>}
       </PageHead>

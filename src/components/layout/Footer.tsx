@@ -23,7 +23,8 @@ export function Footer() {
           <div className="label">Trust</div>
           <Link href="/methodology">Methodology</Link>
           <Link href="/data-status">Data Status</Link>
-          <Link href="/about">About &amp; Credits</Link>
+          <Link href="/about">About</Link>
+          <Link href="/about/credits">Credits &amp; Sources</Link>
         </div>
         <div className="grid content-start gap-1.5">
           <div className="label">Motion</div>

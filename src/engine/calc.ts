@@ -50,8 +50,10 @@ export function computeStats(inp: CalcInput): StatBlock {
   let weaponAtk = 0;
   if (inp.weapon) {
     const wl = WEAPON_LEVELS[inp.weaponLv] ?? WEAPON_LEVELS[WEAPON_LEVELS.length - 1];
-    weaponAtk = inp.weapon.atk * wl.atk;
+    const real = inp.weapon.levelCurve?.[wl.label];
+    weaponAtk = real ? real[0] : inp.weapon.atk * wl.atk;
     const sec = weaponSecondary(inp.weapon, wl.stat);
+    if (sec && real) sec.v = real[1];
     if (sec) add(sec.stat, sec.v, `${inp.weapon.name} (secondary)`);
   }
   inp.echoes.forEach((e, i) => {
@@ -83,9 +85,11 @@ export function computeStats(inp: CalcInput): StatBlock {
   add("all", m.dmgBonus, "Manual");
   for (const [k, v] of Object.entries(inp.extra ?? {})) add(k, v as number, "Extra");
 
-  const baseAtk = inp.char.base.atk * lv + weaponAtk;
-  const baseHp = inp.char.base.hp * lv;
-  const baseDef = inp.char.base.def * lv;
+  // Prefer exact datamined stats for this level; fall back to the estimated multiplier table.
+  const exact = inp.char.levelStats?.[CHAR_LEVELS[inp.charLv]?.label ?? ""];
+  const baseAtk = (exact ? exact[1] : inp.char.base.atk * lv) + weaponAtk;
+  const baseHp = exact ? exact[0] : inp.char.base.hp * lv;
+  const baseDef = exact ? exact[2] : inp.char.base.def * lv;
   const s = (k: string) => sums[k] || 0;
   const bonus: Record<string, number> = { ele: s("ele"), all: s("all") };
   for (const t of ["basic", "heavy", "skill", "lib", "intro", "outro", "echoSkill"]) bonus[t] = s(t);

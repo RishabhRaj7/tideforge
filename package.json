@@ -7,22 +7,25 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "data:build": "tsx scripts/pipeline/run.ts",
     "test": "vitest run",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "data:build": "tsx scripts/pipeline/run.ts",
+    "data:fetch": "tsx scripts/pipeline/fetch/nanoka.ts",
+    "data:images": "tsx scripts/pipeline/fetch/images.ts",
+    "data:curves": "tsx scripts/pipeline/normalize/curves.ts",
+    "data:validate": "vitest run tests/data.test.ts tests/curves.test.ts tests/parsers.test.ts",
+    "data:all": "npm run data:fetch && npm run data:build && npm run data:curves && npm run data:images && npm run data:validate"
   },
   "dependencies": {
     "dotenv": "17.3.1",
     "drizzle-orm": "0.45.2",
     "minisearch": "^7.2.0",
-    "motion": "^14.11.0",
+    "motion": "^14.11.1",
     "next": "16.2.6",
     "pg": "8.20.0",
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "server-only": "^0.0.1",
-    "tsx": "^4.23.15",
-    "vitest": "^5.1.0",
     "zod": "^4.6.7",
     "zustand": "^5.1.0"
   },
@@ -32,11 +35,17 @@
     "@types/pg": "8.18.0",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
+    "cheerio": "^1.2.0",
     "drizzle-kit": "0.31.10",
     "eslint": "9.39.4",
     "eslint-config-next": "16.2.6",
     "postcss": "8.5.8",
     "tailwindcss": "4.1.17",
-    "typescript": "5.9.3"
+    "tsx": "^4.23.15",
+    "typescript": "5.9.3",
+    "vitest": "^5.1.0"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

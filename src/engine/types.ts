@@ -51,6 +51,8 @@ export type EngineChar = {
   weapon: string;
   base: { hp: number; atk: number; def: number };
   baseConfidence: Confidence;
+  /** Exact datamined [hp, atk, def] keyed by CHAR_LEVELS label. When present it replaces the estimated multiplier table. */
+  levelStats?: Record<string, [number, number, number]>;
   skills: { name: string; type: string; rows: HitRow[] }[];
 };
 
@@ -62,6 +64,8 @@ export type EngineWeapon = {
   atk: number;
   stat: string;
   statValue: number;
+  /** Exact datamined [baseAtk, secondaryValue(%)] keyed by WEAPON_LEVELS label. */
+  levelCurve?: Record<string, [number, number]>;
   effects: { stat: string; v: number[]; always: boolean; stacks: number; text: string; el?: string }[];
 };
 

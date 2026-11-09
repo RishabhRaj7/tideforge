@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from chars import file_urls, download
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-D = os.path.join(ROOT, 'src', 'data')
+D = os.path.join(ROOT, 'data', 'raw')
 ld = lambda n: json.load(open(os.path.join(D, n + '.raw.json')))
 sv = lambda n, o: json.dump(o, open(os.path.join(D, n + '.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
 

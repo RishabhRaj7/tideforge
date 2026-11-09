@@ -6,9 +6,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: npm }
+        with: { node-version-file: .nvmrc, cache: npm }
       - run: npm ci
-      - run: npm run data:build && git diff --exit-code src/data/generated || echo "::warning::generated data changed; commit it"
+      - name: Data invariants (golden curves, parsers, schema)
+        run: npm run data:validate
       - run: npx tsc --noEmit
       - run: npm test
       - run: npm run build

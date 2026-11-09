@@ -3,7 +3,7 @@ import { listCharacters, listEchoes, listSonatas, listWeapons } from "@/server/r
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  const pages = ["", "/characters", "/weapons", "/echoes", "/sonatas", "/tier-list", "/calculator", "/convene", "/banners", "/events", "/patches", "/materials", "/glossary", "/methodology", "/data-status", "/about"];
+  const pages = ["", "/characters", "/weapons", "/echoes", "/sonatas", "/tier-list", "/calculator", "/convene", "/banners", "/events", "/patches", "/materials", "/glossary", "/methodology", "/data-status", "/about", "/about/credits"];
   return [
     ...pages.map((p) => ({ url: `${base}${p}` })),
     ...listCharacters().map((c) => ({ url: `${base}/characters/${c.slug}` })),

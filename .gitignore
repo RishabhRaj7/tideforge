@@ -9,3 +9,7 @@ next-env.d.ts
 .env.local
 .DS_Store
 npm-debug.log*
+
+# Mirrored game art + raw datamine caches (reproducible; see docs/ARCHITECTURE.md)
+public/img
+data/raw/nanoka

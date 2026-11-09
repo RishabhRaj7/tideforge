@@ -1,0 +1,25 @@
+name: data-watch
+# Weekly: compare nanoka's manifest with src/data/version.json and open an issue when a new live/latest version exists.
+on:
+  schedule: [{ cron: "0 6 * * 1" }]
+  workflow_dispatch:
+permissions: { issues: write, contents: read }
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare versions
+        id: v
+        run: |
+          M=$(curl -fsS -A "TideforgeBot/1.0 (+https://github.com/RishabhRaj7/tideforge)" https://static.nanoka.cc/manifest.json)
+          LIVE=$(echo "$M" | jq -r .ww.live); LATEST=$(echo "$M" | jq -r .ww.latest)
+          OURS=$(jq -r .live src/data/version.json)
+          echo "live=$LIVE" >> $GITHUB_OUTPUT; echo "latest=$LATEST" >> $GITHUB_OUTPUT; echo "ours=$OURS" >> $GITHUB_OUTPUT
+          [ "$LIVE" != "$OURS" ] && echo "changed=true" >> $GITHUB_OUTPUT || echo "changed=false" >> $GITHUB_OUTPUT
+      - name: Open issue
+        if: steps.v.outputs.changed == 'true'
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          gh issue create --title "Data update: nanoka live is ${{ steps.v.outputs.live }} (we ship ${{ steps.v.outputs.ours }})" \
+            --body "Run \`npm run data:all\`, review the diff, bump src/data/version.json, open a PR. Latest (beta) is ${{ steps.v.outputs.latest }}. See docs/DATA.md."

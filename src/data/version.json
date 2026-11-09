@@ -1,0 +1,5 @@
+{
+  "live": "3.7",
+  "beta": null,
+  "note": "Single source for the live game version. Updated by the data-watch workflow / `npm run data:fetch`."
+}

@@ -1,0 +1,18 @@
+{
+  "generatedAt": "2026-11-09",
+  "source": "nanoka.cc",
+  "version": "3.7",
+  "characters": {
+    "ours": 61,
+    "withRealCurves": 60,
+    "unmatched": [
+      "lily"
+    ],
+    "skillRows": 2029
+  },
+  "weapons": {
+    "ours": 118,
+    "withRealCurves": 118,
+    "unmatched": []
+  }
+}

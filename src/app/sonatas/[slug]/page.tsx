@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { GameImage } from "@/components/GameImage";
 import { notFound } from "next/navigation";
 import { ConfidenceBadge, Notice, PageHead } from "@/components/ui";
 import { getSonata, listEchoes, listSonatas } from "@/server/repos";
@@ -18,6 +19,7 @@ export default async function SonataPage({ params }: { params: Promise<{ slug: s
   const echoes = listEchoes().filter((e) => e.sonatas.includes(s.name));
   return (
     <div>
+      <GameImage variant="icon" src={`/img/sonatas/${s.slug}.webp`} alt={`${s.name} icon`} className="mb-4 h-20 w-20 border border-line" rounded="12px" />
       <PageHead kicker={`Sonata set · ${s.pieces.join(" / ")} pieces`} title={s.name}>Set bonuses and the Echoes that belong to this set.</PageHead>
       {s.effectStatus === "unmodelled" && <div className="mb-4"><Notice>This set&apos;s bonus is not machine-readable yet, so the calculator ignores it.</Notice></div>}
       <div className="grid gap-3">

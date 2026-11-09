@@ -51,6 +51,12 @@ export const CHAR_LEVELS: { label: string; level: number; mult: number }[] = [
 ];
 export const CHAR_LEVEL_CONFIDENCE: Confidence = "estimated";
 
+/** (ascension, level) in the datamine for every CHAR_LEVELS / WEAPON_LEVELS label. */
+export const LEVEL_ASC: Record<string, [number, number]> = {
+  "1": [0, 1], "20": [0, 20], "20 (asc.)": [1, 20], "40": [1, 40], "40 (asc.)": [2, 40], "50": [2, 50], "50 (asc.)": [3, 50],
+  "60": [3, 60], "60 (asc.)": [4, 60], "70": [4, 70], "70 (asc.)": [5, 70], "80": [5, 80], "80 (asc.)": [6, 80], "90": [6, 90],
+};
+
 export const WEAPON_LEVELS: { label: string; atk: number; stat: number }[] = [
   { label: "1", atk: 1, stat: 1 },
   { label: "20", atk: 122 / 47, stat: 1.7778 },

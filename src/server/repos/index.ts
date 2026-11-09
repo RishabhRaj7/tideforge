@@ -7,6 +7,11 @@ import sonatasJson from "@/data/generated/sonatas.json";
 import bannersJson from "@/data/generated/banners.json";
 import eventsJson from "@/data/generated/events.json";
 import reportJson from "@/data/generated/report.json";
+import charCurvesJson from "@/data/generated/curves/characters.json";
+import weaponCurvesJson from "@/data/generated/curves/weapons.json";
+import nanokaReportJson from "@/data/generated/nanoka-report.json";
+import imagesReportJson from "@/data/generated/images.json";
+import { LEVEL_ASC } from "@/engine/constants";
 import type { Banner, Character, Echo, GameEvent, PipelineReport, Sonata, Weapon } from "@/data/schema";
 import type { EngineChar, EngineSonata, EngineWeapon, Element } from "@/engine/types";
 
@@ -17,7 +22,8 @@ const sonatas = sonatasJson as unknown as Sonata[];
 const banners = bannersJson as unknown as Banner[];
 const events = eventsJson as unknown as GameEvent[];
 
-export const GAME_VERSION = "3.7";
+import versionJson from "@/data/version.json";
+export const GAME_VERSION: string = versionJson.live;
 
 export type CharacterCard = Pick<Character, "slug" | "name" | "rarity" | "element" | "weapon" | "roles" | "release" | "releaseVersion" | "images" | "title" | "limited" | "baseStatsConfidence"> & { hasRows: boolean };
 
@@ -85,16 +91,37 @@ export function versions() {
 }
 
 // ---- engine DTOs ----
+type CharCurve = { stats: Record<string, Record<string, [number, number, number]>> };
+type WeaponCurve = { curve: Record<string, Record<string, [number, number]>> };
+const charCurves = charCurvesJson as unknown as Record<string, CharCurve>;
+const weaponCurves = weaponCurvesJson as unknown as Record<string, WeaponCurve>;
+
+/** Datamined stats re-keyed by the engine's level labels ("20 (asc.)", "90", ...). */
+function pickLevels<T>(curve: Record<string, Record<string, T>> | undefined): Record<string, T> | undefined {
+  if (!curve) return undefined;
+  const out: Record<string, T> = {};
+  for (const [label, [asc, lv]] of Object.entries(LEVEL_ASC)) {
+    const v = curve[String(asc)]?.[String(lv)];
+    if (v) out[label] = v;
+  }
+  return Object.keys(out).length === Object.keys(LEVEL_ASC).length ? out : undefined;
+}
+
 export function toEngineChar(c: Character): EngineChar {
+  const levelStats = pickLevels(charCurves[c.slug]?.stats);
   return {
     slug: c.slug, name: c.name, element: c.element as Element, weapon: c.weapon, base: c.base,
-    baseConfidence: c.baseStatsConfidence,
+    baseConfidence: levelStats ? "datamined" : c.baseStatsConfidence,
+    levelStats,
     skills: c.skills.map((s) => ({ name: s.name, type: s.type, rows: s.rows.filter((r) => r.kind === "dmg").map((r) => ({ ...r, kind: r.kind })) })),
   };
 }
 export const toEngineWeapon = (w: Weapon): EngineWeapon => ({
   slug: w.slug, name: w.name, type: w.type, rarity: w.rarity, atk: w.atk, stat: w.stat, statValue: w.statValue, effects: w.effects,
+  levelCurve: pickLevels(weaponCurves[w.slug]?.curve),
 });
+export const nanokaReport = () => nanokaReportJson;
+export const imagesReport = () => imagesReportJson;
 export const toEngineSonata = (s: Sonata): EngineSonata => ({ name: s.name, pieces: s.pieces, effects: s.buffs });
 
 export function engineGear() {

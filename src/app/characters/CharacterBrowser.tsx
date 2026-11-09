@@ -69,7 +69,7 @@ export function CharacterBrowser({ cards }: { cards: Card[] }) {
           {list.map((c) => (
             <motion.div key={c.slug} layout initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
               <Link href={`/characters/${c.slug}`} data-element={c.element} className="card-raised group relative block overflow-hidden no-underline transition-all duration-200 hover:-translate-y-0.5 hover:border-accent hover:shadow-[0_8px_30px_-12px_var(--accent-glow)]">
-                <GameImage src={c.images.card ?? c.images.icon} alt={c.name} element={c.element} className="aspect-[4/5] w-full transition-transform duration-300 group-hover:scale-[1.04]" rounded="0" />
+                <GameImage src={c.images.card ?? c.images.icon} alt={c.name} element={c.element} className="aspect-[3/4] w-full transition-transform duration-300 group-hover:scale-[1.04]" rounded="0" />
                 <div className="absolute left-2 top-2 flex gap-1">{c.tier && <span className="rounded-sm bg-black/70 px-1.5 text-[11px] font-semibold text-accent">{c.tier}</span>}{!c.hasRows && <span title="No calculator data" className="rounded-sm bg-black/70 px-1.5 text-[11px] text-bad">no kit data</span>}</div>
                 <div className="p-3">
                   <div className="flex items-center justify-between gap-2"><span className="font-medium">{c.name}</span><RarityStars n={c.rarity} /></div>

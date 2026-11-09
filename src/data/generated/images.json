@@ -1,0 +1,21 @@
+{
+  "generatedAt": "2026-11-09",
+  "source": "nanoka.cc",
+  "version": "3.7",
+  "files": {
+    "characters": 120,
+    "weapons": 118,
+    "echoes": 187,
+    "sonatas": 37,
+    "elements": 6
+  },
+  "unmatched": {
+    "characters": [
+      "lily"
+    ],
+    "weapons": [],
+    "echoes": [],
+    "sonatas": []
+  },
+  "failed": []
+}

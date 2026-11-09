@@ -38,7 +38,7 @@ export default function MethodologyPage() {
         </ul>
         <h2>Known limitations</h2>
         <ul>
-          <li>Character level multipliers are estimated at Lv 20 and Lv 90 ({CHAR_LEVEL_CONFIDENCE}); other levels use community tables.</li>
+          <li>Resonator and weapon stats at every level and ascension come from datamined curves (nanoka.cc). Only Resonators without a datamine entry fall back to the estimated multiplier table ({CHAR_LEVEL_CONFIDENCE}).</li>
           <li>A single shared skill-level curve is applied to every skill.</li>
           <li>No timeline: hits are summed with no cooldown, Energy or Concerto validation.</li>
           <li>No negative-status damage (Frazzle, Erosion, Bane, Burst, Chafe, Flare) and no Tune Break yet.</li>

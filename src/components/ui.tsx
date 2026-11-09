@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ELEMENT_COLOR, ELEMENT_GLYPH, WEAPON_GLYPH } from "@/lib/game";
+import { ELEMENT_COLOR, WEAPON_GLYPH } from "@/lib/game";
+import { ElementIcon } from "./GameImage";
 
 export function PageHead({ kicker, title, children, element, actions }: { kicker?: string; title: string; children?: ReactNode; element?: string; actions?: ReactNode }) {
   return (
@@ -22,7 +23,7 @@ export function ElementBadge({ element, size = "sm" }: { element: string; size?:
   const c = ELEMENT_COLOR[element] ?? "#888";
   return (
     <span className={`inline-flex items-center gap-1.5 ${size === "md" ? "text-sm" : "text-[12px]"}`} style={{ color: c }}>
-      <span aria-hidden className="font-mono">{ELEMENT_GLYPH[element]}</span>
+      <ElementIcon element={element} size={size === "md" ? 20 : 16} />
       <span>{element}</span>
     </span>
   );

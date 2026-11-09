@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { GameImage } from "@/components/GameImage";
 import { useMemo, useState } from "react";
 import { RarityStars } from "@/components/ui";
 import { WEAPON_TYPES } from "@/engine/constants";
@@ -26,7 +27,7 @@ export function WeaponBrowser({ rows }: { rows: Row[] }) {
           <tbody>
             {list.map((w) => (
               <tr key={w.slug}>
-                <td><Link href={`/weapons/${w.slug}`} className="font-medium no-underline hover:text-accent">{w.name}</Link>{w.resonator && <span className="ml-2 text-[11px] text-dim">{w.resonator}</span>}</td>
+                <td><div className="flex items-center gap-3"><GameImage variant="icon" src={`/img/weapons/${w.slug}.webp`} alt="" className="h-10 w-10 shrink-0" /><div><Link href={`/weapons/${w.slug}`} className="font-medium no-underline hover:text-accent">{w.name}</Link>{w.resonator && <span className="ml-2 text-[11px] text-dim">{w.resonator}</span>}</div></div></td>
                 <td className="text-dim">{w.type}</td><td><RarityStars n={w.rarity} /></td>
                 <td className="num text-right">{w.atk}</td><td className="text-dim">{w.stat} <span className="num">{w.statValue}%</span></td>
                 <td className="text-dim">{w.passive}{!w.modelled && <span className="ml-1 text-[10px] text-warn" title="Not modelled in the calculator">○</span>}</td>

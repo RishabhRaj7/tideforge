@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { GameImage } from "@/components/GameImage";
 import { notFound } from "next/navigation";
 import { ConfidenceBadge, PageHead } from "@/components/ui";
 import { ReportIssue } from "@/components/ReportIssue";
@@ -19,6 +20,7 @@ export default async function EchoPage({ params }: { params: Promise<{ slug: str
   const sets = listSonatas().filter((s) => e.sonatas.includes(s.name));
   return (
     <div>
+      <GameImage variant="icon" src={`/img/echoes/${e.slug}.webp`} alt={`${e.name} icon`} className="mb-4 h-28 w-28 border border-line" rounded="12px" />
       <PageHead kicker={`${e.class} Echo · ${e.cost}-cost · ${e.no}`} title={e.name}>Equip cost {e.cost}. Skill text is shown at level 1 and level 5.</PageHead>
       <div className="grid gap-4 md:grid-cols-2">
         <div className="card p-5"><div className="label mb-2">Echo Skill, Lv 1</div><p className="whitespace-pre-line text-[13.5px] text-mute">{e.skill}</p></div>

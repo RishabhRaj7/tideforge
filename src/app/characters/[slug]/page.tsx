@@ -123,8 +123,8 @@ export default async function CharacterPage({ params }: { params: Promise<{ slug
     <div data-element={c.element}>
       <section className="relative -mx-4 mb-6 overflow-hidden rounded-xl border border-line md:mx-0">
         <div className="aurora" aria-hidden />
-        <div className="relative z-10 grid items-end gap-6 p-5 md:grid-cols-[200px_1fr] md:p-8">
-          <GameImage src={c.images.splash ?? c.images.card ?? c.images.icon} alt={`${c.name} portrait`} element={c.element} className="hidden aspect-[3/4] w-[200px] md:grid" />
+        <div className="relative z-10 grid items-end gap-6 p-5 md:grid-cols-[240px_1fr] md:p-8">
+          <GameImage src={c.images.card ?? c.images.icon} alt={`${c.name} portrait`} element={c.element} className="hidden aspect-[3/4] w-[240px] shadow-[0_20px_60px_-20px_var(--accent-glow)] md:block" />
           <div>
             <div className="label mb-2 text-accent">{c.title || "Resonator"}</div>
             <h1 className="text-4xl font-semibold md:text-5xl">{c.name}</h1>

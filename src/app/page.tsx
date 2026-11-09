@@ -105,7 +105,7 @@ export default function Home() {
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
           {newest.map((c) => (
             <Link key={c.slug} href={`/characters/${c.slug}`} data-element={c.element} className="card-raised group block overflow-hidden no-underline transition-colors hover:border-accent">
-              <GameImage src={c.images.card ?? c.images.icon} alt={c.name} element={c.element} className="aspect-[4/5] w-full" rounded="0" />
+              <GameImage src={c.images.card ?? c.images.icon} alt={c.name} element={c.element} className="aspect-[3/4] w-full" rounded="0" />
               <div className="p-2.5">
                 <div className="text-[13.5px] font-medium">{c.name}</div>
                 <div className="flex items-center justify-between"><ElementBadge element={c.element} /><span className="text-[11px] text-dim">v{c.releaseVersion}</span></div>
