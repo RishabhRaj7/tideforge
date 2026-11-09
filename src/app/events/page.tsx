@@ -1,52 +1,32 @@
 import type { Metadata } from "next";
-import { PageHead } from "@/components/ui";
-import { events } from "@/lib/data";
+import { PageHead, Section } from "@/components/ui";
+import { Countdown } from "@/components/Countdown";
+import { formatDate } from "@/lib/game";
+import { endMs, listEvents, startMs } from "@/server/repos";
 
-export const metadata: Metadata = { title: "Events" };
+export const metadata: Metadata = { title: "Events & Calendar" };
+export const revalidate = 300;
 
 export default function EventsPage() {
-  const byVersion = new Map<string, typeof events>();
-  for (const e of events) byVersion.set(e.version, [...(byVersion.get(e.version) || []), e]);
-  const versions = [...byVersion.keys()].sort((a, b) => {
-    const [a1, a2] = a.split(".").map(Number);
-    const [b1, b2] = b.split(".").map(Number);
-    return b1 - a1 || b2 - a2;
-  });
+  const now = Date.now();
+  const all = listEvents();
+  const active = all.filter((e) => now >= startMs(e.start) && now <= endMs(e.end) && e.end !== "indefinite").sort((a, b) => a.end.localeCompare(b.end));
+  const ongoing = all.filter((e) => e.end === "indefinite");
+  const upcoming = all.filter((e) => now < startMs(e.start)).sort((a, b) => a.start.localeCompare(b.start));
+  const past = all.filter((e) => e.end !== "indefinite" && now > endMs(e.end)).sort((a, b) => b.end.localeCompare(a.end)).slice(0, 80);
+  const Row = ({ e, live }: { e: (typeof all)[number]; live?: boolean }) => (
+    <tr><td>{e.name}</td><td className="num text-dim">{e.version}</td><td className="text-dim">{formatDate(e.start)} → {formatDate(e.end)}</td><td className="text-right">{live && <Countdown to={e.end} />}</td></tr>
+  );
+  const T = ({ rows, live }: { rows: typeof all; live?: boolean }) => (
+    <div className="card overflow-x-auto scroll-thin"><table className="tbl"><thead><tr><th>Event</th><th>Ver.</th><th>Dates</th><th /></tr></thead><tbody>{rows.map((e) => <Row key={e.name + e.start} e={e} live={live} />)}</tbody></table></div>
+  );
   return (
     <div>
-      <PageHead kicker="Archive" title="Events">
-        {events.length} events from version 1.0 onward, grouped by patch with their run dates.
-      </PageHead>
-      <div className="mb-8 flex flex-wrap gap-2">
-        {versions.map((v) => (
-          <a key={v} href={`#v${v}`} className="chip no-underline hover:text-fg">
-            v{v}
-          </a>
-        ))}
-      </div>
-      <div className="space-y-8">
-        {versions.map((v) => (
-          <section key={v} id={`v${v}`} className="scroll-mt-24">
-            <h2 className="mb-2 text-lg font-semibold">
-              Version {v} <span className="text-[13px] font-normal text-dim">{byVersion.get(v)!.length} events</span>
-            </h2>
-            <div className="card">
-              <table className="tbl">
-                <tbody>
-                  {byVersion.get(v)!.map((e, i) => (
-                    <tr key={i}>
-                      <td>{e.name}</td>
-                      <td className="whitespace-nowrap text-right text-mute">
-                        {e.start} – {e.end}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        ))}
-      </div>
+      <PageHead kicker="Meta" title="Events & Calendar">Timed events with live countdowns. Dates are Asia server time (UTC+8); other servers reset at different real-world times.</PageHead>
+      <Section title={`Active (${active.length})`}>{active.length ? <T rows={active} live /> : <p className="card p-4 text-[13px] text-dim">No timed events are active right now.</p>}</Section>
+      {upcoming.length > 0 && <Section title="Upcoming"><T rows={upcoming} /></Section>}
+      <Section title={`Always available (${ongoing.length})`}><T rows={ongoing} /></Section>
+      <Section title="Recently ended" sub="Latest 80"><T rows={past} /></Section>
     </div>
   );
 }

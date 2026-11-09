@@ -1,17 +1,16 @@
 import type { Metadata } from "next";
-import EchoGrid from "@/components/EchoGrid";
 import { PageHead } from "@/components/ui";
-import { echoes, sonatas } from "@/lib/data";
+import { listEchoes } from "@/server/repos";
+import { EchoBrowser } from "./EchoBrowser";
 
-export const metadata: Metadata = { title: "Echoes" };
+export const metadata: Metadata = { title: "Echoes", description: "Every Echo with cost, class, Sonata sets and skill by level." };
 
 export default function EchoesPage() {
+  const rows = listEchoes().map((e) => ({ slug: e.slug, name: e.name, no: e.no, cost: e.cost, class: e.class, sonatas: e.sonatas }));
   return (
     <div>
-      <PageHead kicker="Database" title="Echoes">
-        All {echoes.length} Echoes, including Nightmare variants, with cost, class, possible Sonata sets and echo skill text. Cost 4 echoes are Overlords and Calamities, cost 3 are Elites, cost 1 are Common.
-      </PageHead>
-      <EchoGrid items={echoes} sonataNames={sonatas.map((s) => s.name)} />
+      <PageHead kicker="Database" title="Echoes">{rows.length} Echoes. Filter by cost, class or Sonata set.</PageHead>
+      <EchoBrowser rows={rows} />
     </div>
   );
 }

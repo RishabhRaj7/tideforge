@@ -1,57 +1,24 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { PageHead } from "@/components/ui";
-import { echoes, sonatas } from "@/lib/data";
+import { listSonatas } from "@/server/repos";
 
-export const metadata: Metadata = { title: "Sonata Sets" };
+export const metadata: Metadata = { title: "Sonata Sets", description: "All Echo Sonata set bonuses." };
 
 export default function SonatasPage() {
-  const groups = [
-    ["2 / 5-piece sets", sonatas.filter((s) => s.pieces.includes(5))],
-    ["3-piece sets", sonatas.filter((s) => s.pieces.length === 1 && s.pieces[0] === 3)],
-    ["1-piece sets", sonatas.filter((s) => s.pieces.length === 1 && s.pieces[0] === 1)],
-  ] as const;
+  const sets = listSonatas();
   return (
     <div>
-      <PageHead kicker="Database" title="Sonata Sets">
-        Echoes carry one Sonata. Equip two or five of the same set for most sets (three or one for the special sets) to unlock the bonuses.
-      </PageHead>
-      {groups.map(([title, list]) => (
-        <section key={title} className="mb-10">
-          <h2 className="mb-3 text-lg font-semibold">
-            {title} <span className="text-[13px] font-normal text-dim">{list.length}</span>
-          </h2>
-          <div className="grid gap-3 md:grid-cols-2">
-            {list.map((s) => {
-              const members = echoes.filter((e) => e.sonatas.includes(s.name) && e.cost > 1);
-              return (
-                <div key={s.name} className="card p-4">
-                  <div className="flex items-center gap-3">
-                    {s.icon && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={s.icon} alt="" className="h-10 w-10 object-contain" />
-                    )}
-                    <h3 className="font-semibold">{s.name}</h3>
-                  </div>
-                  <div className="mt-3 space-y-2 text-[13px]">
-                    {s.pieces.map((p, i) => (
-                      <div key={p} className="grid grid-cols-[44px_1fr] gap-2">
-                        <span className="font-mono text-accent">{p}pc</span>
-                        <span className="text-[#c3c8cc]">{s.effects[i]}</span>
-                      </div>
-                    ))}
-                  </div>
-                  {members.length > 0 && (
-                    <div className="mt-3 border-t border-line pt-2 text-[12px] text-dim">
-                      Echoes: {members.slice(0, 14).map((m) => m.name).join(", ")}
-                      {members.length > 14 ? ` +${members.length - 14} more` : ""}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      ))}
+      <PageHead kicker="Database" title="Sonata Sets">{sets.length} sets. The calculator applies bonuses marked as modelled.</PageHead>
+      <div className="grid gap-3 md:grid-cols-2">
+        {sets.map((s) => (
+          <Link key={s.slug} href={`/sonatas/${s.slug}`} className="card-raised block p-4 no-underline transition-colors hover:border-accent">
+            <div className="flex items-center justify-between"><span className="font-display text-[15px]">{s.name}</span><span className="chip">{s.pieces.join(" / ")}pc</span></div>
+            <ul className="mt-2 grid gap-1 text-[12.5px] text-dim">{s.effects.slice(0, 2).map((x, i) => <li key={i} className="line-clamp-2">{x}</li>)}</ul>
+            {s.effectStatus === "unmodelled" && <div className="mt-2 text-[11px] text-warn">Not modelled in calculator</div>}
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

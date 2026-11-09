@@ -1,237 +1,150 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ElementTag, Stars } from "@/components/ui";
-import { characters, getCharacter, weapons, ELEMENT_COLOR, type Skill } from "@/lib/data";
-import { SKILL_CURVE, fmt } from "@/lib/calc";
+import { ChainView } from "@/components/ChainView";
+import { GameImage } from "@/components/GameImage";
+import { OwnedButton } from "@/components/OwnedButton";
+import { ReportIssue } from "@/components/ReportIssue";
+import { SkillKit } from "@/components/SkillKit";
+import { Tabs } from "@/components/Tabs";
+import { ConfidenceBadge, ElementBadge, Notice, RarityStars, WeaponBadge } from "@/components/ui";
+import { TIER_ENTRIES, TIER_META } from "@/content/tier-list";
+import { formatDate } from "@/lib/game";
+import { getCharacter, listCharacters, listSonatas, signatureWeapon, weaponsFor } from "@/server/repos";
 
 export function generateStaticParams() {
-  return characters.map((c) => ({ slug: c.slug }));
+  return listCharacters().map((c) => ({ slug: c.slug }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const c = getCharacter(slug);
-  return { title: c ? `${c.name} — Build, Skills & Chain` : "Character" };
-}
-
-function hitsText(hits: [number, number][], mult: number) {
-  return hits.map(([v, n]) => `${fmt(v * mult, 2)}%${n > 1 ? `×${n}` : ""}`).join(" + ");
-}
-
-function SkillBlock({ s }: { s: Skill }) {
-  return (
-    <div className="card p-4">
-      <div className="flex flex-wrap items-baseline gap-3">
-        <h3 className="text-[16px] font-semibold">{s.name}</h3>
-        <span className="label">{s.type}</span>
-      </div>
-      <p className="mt-2 whitespace-pre-line text-[14px] text-[#c3c8cc]">{s.desc}</p>
-      {s.rows.length > 0 && (
-        <details className="mt-3">
-          <summary className="cursor-pointer text-[12px] text-accent">Scaling table (levels 1–10)</summary>
-          <div className="scroll-thin mt-2 overflow-x-auto">
-            <table className="tbl">
-              <thead>
-                <tr>
-                  <th>Attribute</th>
-                  {SKILL_CURVE.map((_, i) => (
-                    <th key={i}>Lv{i + 1}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {s.rows.map((r) => (
-                  <tr key={r.label}>
-                    <td className="whitespace-nowrap">{r.label}</td>
-                    {SKILL_CURVE.map((m, i) => (
-                      <td key={i} className="whitespace-nowrap font-mono text-[12px]">
-                        {i === 0 || i === 9 ? hitsText(r.hits, m) : fmt(r.hits.reduce((a, [v, n]) => a + v * n, 0) * m, 1) + "%"}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="mt-1 text-[11px] text-dim">Levels 1 and 10 show each hit; other levels show the combined total.</p>
-        </details>
-      )}
-      {s.info.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[12px] text-mute">
-          {s.info.map((i) => (
-            <span key={i.label}>
-              {i.label}: <span className="text-fg">{i.value}</span>
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+  if (!c) return {};
+  return { title: `${c.name} build, kit and chain`, description: `${c.name} (${c.rarity}★ ${c.element} ${c.weapon}): kit multipliers, Resonance Chain, weapons, Sonata sets and materials.` };
 }
 
 export default async function CharacterPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const c = getCharacter(slug);
   if (!c) notFound();
-  const lv90 = { hp: c.base.hp * 12.5, atk: c.base.atk * 12.5, def: c.base.def * 12.5 };
-  const sigs = weapons.filter((w) => w.type === c.weapon && w.resonator === c.name.split(" (")[0]);
-  const bestWeapons = weapons.filter((w) => w.type === c.weapon && w.rarity === 5).slice(0, 8);
-  const art = c.images.splash || c.images.card;
-  const color = ELEMENT_COLOR[c.element];
-  const facts: [string, string][] = [
-    ["Class", c.class],
-    ["Title", c.title],
-    ["Nation", c.nation],
-    ["Affiliation", c.affiliation],
-    ["Birthday", c.birthday],
-    ["Birthplace", c.birthplace],
-    ["Gender", c.gender],
-    ["Favourite dish", c.dish],
-    ["Release", c.release],
-    ["Obtained via", c.obtain],
-  ].filter(([, v]) => v) as [string, string][];
+  const tier = TIER_ENTRIES[c.slug];
+  const sig = signatureWeapon(c);
+  const weapons = weaponsFor(c).filter((w) => w.slug !== sig?.slug).slice(0, 6);
+  const sonatas = listSonatas().filter((s) => s.buffs.some((b) => b.el === c.element)).slice(0, 4);
+  const placeholder = c.issues.includes("placeholder-base-stats");
+  const noRows = c.issues.includes("no-skill-rows");
 
-  return (
-    <div>
-      <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
-        <div>
-          <div className="card overflow-hidden" style={{ borderTop: `3px solid ${color}` }}>
-            {c.images.sprite || c.images.card ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={(c.images.sprite || c.images.card)!} alt={c.name} className="mx-auto max-h-[520px] w-full object-contain bg-panel2 p-2" />
-            ) : (
-              <div className="aspect-[3/4] bg-panel2" />
-            )}
+  const fact = (label: string, v: string) => v ? (<div key={label} className="flex justify-between gap-4 border-b border-line py-1.5"><dt className="text-dim">{label}</dt><dd className="text-right">{v}</dd></div>) : null;
+
+  const overview = (
+    <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+      <div className="grid content-start gap-4">
+        {tier ? (
+          <div className="card p-5">
+            <div className="label mb-1">Editorial verdict · {tier.role}</div>
+            <div className="flex items-center gap-3"><span className="font-display text-3xl text-accent">{tier.tier}</span>{tier.expert && <span className="rounded-sm border border-warn/50 px-1.5 text-[10px] uppercase text-warn">Expert</span>}</div>
+            <p className="mt-2 text-mute">{tier.note}</p>
+            <p className="mt-2 text-[12px] text-dim">Version {TIER_META.version} · verified {TIER_META.verifiedAt} · <Link href="/tier-list" className="text-accent">full tier list</Link></p>
           </div>
-          <div className="mt-3 flex gap-2">
-            <Link href={`/calculator?c=${c.slug}`} className="btn btn-primary flex-1 justify-center no-underline">
-              Open in Build Simulator
+        ) : (
+          <Notice tone="info">{c.name} has no editorial rating yet. We rate Resonators once their kit data is complete and measurable.</Notice>
+        )}
+        {c.intro && <div className="card p-5"><div className="label mb-1">Profile</div><p className="text-mute">{c.intro}</p></div>}
+        {c.roles.length > 0 && <div className="flex flex-wrap gap-1.5">{c.roles.map((r) => <span key={r} className="chip">{r}</span>)}</div>}
+      </div>
+      <aside className="card h-fit p-4 text-[13px]">
+        <div className="label mb-2">Quick facts</div>
+        <dl>
+          {fact("Element", c.element)}{fact("Weapon", c.weapon)}{fact("Class", c.class)}{fact("Released", c.releaseVersion ? `v${c.releaseVersion} · ${formatDate(c.release)}` : formatDate(c.release))}
+          {fact("Obtain", c.obtain)}{fact("Favourite dish", c.dish)}
+        </dl>
+        <div className="label mb-1 mt-4 flex items-center gap-2">Base stats (Lv 1) <ConfidenceBadge level={c.baseStatsConfidence} /></div>
+        <dl className="num">
+          {fact("HP", String(c.base.hp))}{fact("ATK", String(c.base.atk))}{fact("DEF", String(c.base.def))}
+        </dl>
+      </aside>
+    </div>
+  );
+
+  const kit = noRows && c.skills.length === 0 ? <Notice tone="bad">Kit data for {c.name} is not available yet, so skill multipliers and the calculator cannot cover this Resonator.</Notice> : <SkillKit skills={c.skills} />;
+
+  const builds = (
+    <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid content-start gap-4">
+        <div className="card p-5">
+          <div className="label mb-2">Weapons ({c.weapon})</div>
+          {sig && (
+            <Link href={`/weapons/${sig.slug}`} className="card-raised mb-2 flex items-center justify-between p-3 no-underline hover:border-accent">
+              <span><span className="block">{sig.name}</span><span className="text-[11.5px] text-dim">Signature · {sig.passive?.name}</span></span><RarityStars n={sig.rarity} />
             </Link>
-          </div>
-        </div>
-        <div>
-          <div className="label">{c.title || "Resonator"}</div>
-          <h1 className="mt-1 text-4xl font-semibold tracking-tight">{c.name}</h1>
-          <div className="mt-3 flex flex-wrap items-center gap-4 text-[13px]">
-            <Stars n={c.rarity} />
-            <ElementTag element={c.element} />
-            <span className="text-mute">{c.weapon}</span>
-            {c.roles.map((r) => (
-              <span key={r} className="chip">
-                {r}
-              </span>
-            ))}
-          </div>
-          {c.intro && <p className="prose-wuwa mt-5 max-w-3xl text-[15px] text-[#c3c8cc]">{c.intro}</p>}
-          {(c.limited || c.statsEstimated) && (
-            <p className="mt-3 border-l-2 border-accent pl-3 text-[13px] text-mute">
-              {c.limited && "The community wiki has incomplete kit data for this Resonator, so parts of the skill list are missing. "}
-              {c.statsEstimated && "Base stats are not published yet; the simulator uses a typical value for this rarity."}
-            </p>
           )}
-          <div className="mt-6 grid grid-cols-3 gap-3">
-            {[
-              ["HP (Lv 90)", lv90.hp],
-              ["ATK (Lv 90)", lv90.atk],
-              ["DEF (Lv 90)", lv90.def],
-            ].map(([l, v]) => (
-              <div key={l as string} className="card p-3">
-                <div className="label">{l}</div>
-                <div className="mt-1 font-mono text-xl">{fmt(v as number)}</div>
-              </div>
+          <div className="grid gap-1.5">
+            {weapons.map((w) => (
+              <Link key={w.slug} href={`/weapons/${w.slug}`} className="flex items-center justify-between rounded px-2 py-1.5 text-[13.5px] no-underline hover:bg-panel2"><span>{w.name}</span><span className="flex items-center gap-2 text-[12px] text-dim">{w.atk} ATK · {w.stat}<RarityStars n={w.rarity} /></span></Link>
             ))}
           </div>
-          <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-2 text-[13px] sm:grid-cols-3">
-            {facts.map(([k, v]) => (
-              <div key={k} className="border-b border-line pb-2">
-                <dt className="label">{k}</dt>
-                <dd>{v}</dd>
-              </div>
-            ))}
-            {Object.entries(c.voice).map(([k, v]) => (
-              <div key={k} className="border-b border-line pb-2">
-                <dt className="label">Voice ({k})</dt>
-                <dd>{v}</dd>
-              </div>
-            ))}
-          </dl>
+          <p className="mt-3 text-[12px] text-dim">Sorted by rarity and base ATK. Weapon-vs-weapon DPR deltas arrive with the rotation simulator.</p>
+        </div>
+        <Link href={`/calculator?char=${c.slug}${sig ? `&weapon=${sig.slug}` : ""}`} className="btn btn-primary">Open {c.name} in the Calculator</Link>
+      </div>
+      <div className="grid content-start gap-4">
+        <div className="card p-5">
+          <div className="label mb-2">Echo layout (general guidance)</div>
+          <p className="text-[13.5px] text-mute">Total cost 12: <b>4-3-3-1-1</b>. Typical carry mains: 4-cost Crit. Rate / Crit. DMG, 3-cost {c.element} DMG or Energy Regen, 1-cost ATK%. Check Energy Regen against your rotation in the calculator.</p>
+          <p className="mt-2 text-[12px] text-dim">Not Resonator-specific. Per-character Echo recommendations are on the roadmap.</p>
+        </div>
+        <div className="card p-5">
+          <div className="label mb-2">{c.element} Sonata sets</div>
+          {sonatas.length ? sonatas.map((s) => <Link key={s.slug} href={`/sonatas/${s.slug}`} className="block rounded px-2 py-1.5 text-[13.5px] no-underline hover:bg-panel2">{s.name} <span className="text-dim">{s.pieces.join("/")}pc</span></Link>) : <p className="text-[13px] text-dim">No element-specific set in the data.</p>}
         </div>
       </div>
+    </div>
+  );
 
-      <nav className="sticky top-14 z-20 mt-10 flex gap-5 border-b border-line bg-ink py-3 text-[13px]">
-        {["skills", "chain", "weapons", "materials"].map((s) => (
-          <a key={s} href={`#${s}`} className="capitalize text-mute no-underline hover:text-fg">
-            {s === "chain" ? "Resonance Chain" : s === "weapons" ? "Weapons" : s}
-          </a>
-        ))}
-      </nav>
+  const mats = (
+    <div className="grid max-w-2xl gap-3">
+      {([["Boss material", c.materials.boss], ["Local specialty", c.materials.local], ["Common drop", c.materials.common], ["Weekly boss", c.materials.weekly]] as const).map(([k, v]) => (
+        <div key={k} className="card flex items-center justify-between p-4"><span className="label">{k}</span>{v ? <span>{v}</span> : <span className="text-[13px] text-bad">Not in our data yet</span>}</div>
+      ))}
+      <p className="text-[12px] text-dim">Quantities per level are not in the dataset yet. See <Link href="/materials" className="text-accent">Materials</Link> to farm for several Resonators at once.</p>
+    </div>
+  );
 
-      <section id="skills" className="mt-8 scroll-mt-28">
-        <h2 className="mb-4 text-xl font-semibold">Skills</h2>
-        <div className="grid gap-3 lg:grid-cols-2">
-          {c.skills.map((s, i) => (
-            <SkillBlock key={i} s={s} />
-          ))}
-          {c.skills.length === 0 && <p className="text-mute">Kit details have not been published yet.</p>}
+  const lore = (
+    <div className="grid max-w-2xl gap-4">
+      <dl className="card p-4 text-[13.5px]">
+        {fact("Title", c.title)}{fact("Real name", c.realname)}{fact("Gender", c.gender)}{fact("Birthday", c.birthday)}{fact("Birthplace", c.birthplace)}{fact("Nation", c.nation)}{fact("Affiliation", c.affiliation)}
+        {Object.entries(c.voice).map(([k, v]) => fact(`Voice (${k})`, v))}
+      </dl>
+    </div>
+  );
+
+  return (
+    <div data-element={c.element}>
+      <section className="relative -mx-4 mb-6 overflow-hidden rounded-xl border border-line md:mx-0">
+        <div className="aurora" aria-hidden />
+        <div className="relative z-10 grid items-end gap-6 p-5 md:grid-cols-[200px_1fr] md:p-8">
+          <GameImage src={c.images.splash ?? c.images.card ?? c.images.icon} alt={`${c.name} portrait`} element={c.element} className="hidden aspect-[3/4] w-[200px] md:grid" />
+          <div>
+            <div className="label mb-2 text-accent">{c.title || "Resonator"}</div>
+            <h1 className="text-4xl font-semibold md:text-5xl">{c.name}</h1>
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2"><ElementBadge element={c.element} size="md" /><WeaponBadge type={c.weapon} /><RarityStars n={c.rarity} />{tier && <span className="chip" data-on>{tier.tier} · {tier.role}</span>}{c.limited && <span className="chip">Limited</span>}</div>
+            <div className="mt-4 flex flex-wrap gap-2"><OwnedButton slug={c.slug} /><Link href={`/calculator?char=${c.slug}`} className="btn">Open in Calculator</Link><ReportIssue /></div>
+          </div>
         </div>
       </section>
-
-      <section id="chain" className="mt-12 scroll-mt-28">
-        <h2 className="mb-4 text-xl font-semibold">Resonance Chain</h2>
-        <div className="grid gap-3 md:grid-cols-2">
-          {c.chain.map((n) => (
-            <div key={n.level} className="card p-4">
-              <div className="flex items-baseline gap-3">
-                <span className="font-mono text-accent">S{n.level}</span>
-                <h3 className="font-semibold">{n.name}</h3>
-              </div>
-              <p className="mt-2 text-[14px] text-[#c3c8cc]">{n.desc}</p>
-            </div>
-          ))}
-          {c.chain.length === 0 && <p className="text-mute">Not published yet.</p>}
-        </div>
-      </section>
-
-      <section id="weapons" className="mt-12 scroll-mt-28">
-        <h2 className="mb-1 text-xl font-semibold">Weapons ({c.weapon})</h2>
-        <p className="mb-4 text-[13px] text-mute">Signature weapon first, then every 5★ {c.weapon.toLowerCase()}. Compare them with real numbers in the simulator.</p>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {[...sigs, ...bestWeapons.filter((w) => !sigs.includes(w))].map((w) => (
-            <Link key={w.slug} href={`/weapons/${w.slug}`} className="card flex items-center gap-3 p-3 no-underline hover:border-line2">
-              {w.icon && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={w.icon} alt={w.name} className="h-12 w-12 object-contain" />
-              )}
-              <div className="min-w-0">
-                <div className="truncate text-[14px]">{w.name}</div>
-                <div className="text-[12px] text-mute">
-                  {sigs.includes(w) ? "Signature · " : ""}ATK {fmt(w.atk * 12.5)} · {w.stat}
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section id="materials" className="mt-12 scroll-mt-28">
-        <h2 className="mb-4 text-xl font-semibold">Ascension materials</h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            ["Boss material", c.materials.boss],
-            ["Local specialty", c.materials.local],
-            ["Common drop", c.materials.common],
-            ["Weekly", c.materials.weekly],
-          ]
-            .filter(([, v]) => v)
-            .map(([k, v]) => (
-              <div key={k} className="card p-3">
-                <div className="label">{k}</div>
-                <div className="mt-1">{v}</div>
-              </div>
-            ))}
-        </div>
-      </section>
+      {placeholder && <div className="mb-4"><Notice tone="bad"><b>Placeholder base stats.</b> {c.name}&apos;s HP/ATK/DEF in our data are not real game values, so calculator results are not meaningful for this Resonator.</Notice></div>}
+      <Tabs
+        tabs={[
+          { id: "overview", label: "Overview", content: overview },
+          { id: "kit", label: "Kit", content: kit },
+          { id: "chain", label: "Resonance Chain", content: <ChainView chain={c.chain} /> },
+          { id: "builds", label: "Builds", content: builds },
+          { id: "materials", label: "Materials", content: mats },
+          { id: "lore", label: "Lore", content: lore },
+        ]}
+      />
+      <p className="mt-8 text-[12px] text-dim">Source: {c.provenance.sourceRef} · confidence <ConfidenceBadge level={c.provenance.confidence} /> · checked {c.provenance.verifiedAt}</p>
     </div>
   );
 }
